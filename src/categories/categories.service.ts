@@ -4,6 +4,8 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
+import { Socket } from 'socket.io';
+import { Request } from 'express';
 // import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -14,14 +16,21 @@ export class CategoriesService {
     // private readonly usersService: UsersService,
   ) {}
 
-  createCategory(createCategoryDto: CreateCategoryDto) {
-    return console.log(createCategoryDto);
-    // return this.categoryRepository.save(createCategoryDto);
+  async createCategory(
+    request: Request,
+    client: Socket,
+    createCategoryDto: CreateCategoryDto,
+  ) {
+    await this.categoryRepository.save(createCategoryDto);
+    return this.getUserCategories(request, client);
   }
 
-  // findAll() {
-  //   return `This action returns all categories`;
-  // }
+  async getUserCategories(request: Request, client: Socket) {
+    const userCategories = await this.categoryRepository.findBy({
+      createdBy: request['user'].uid,
+    });
+    return client.emit('userCats', userCategories);
+  }
 
   // findOne(id: number) {
   //   return `This action returns a #${id} category`;

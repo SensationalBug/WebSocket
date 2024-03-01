@@ -3,14 +3,16 @@ import {
   WebSocketGateway,
   SubscribeMessage,
   ConnectedSocket,
+  // ConnectedSocket,
 } from '@nestjs/websockets';
-// import { Socket } from 'socket.io';
-import { Request, UseGuards } from '@nestjs/common';
+import { Socket } from 'socket.io';
+import { BadRequestException, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 // import { UsersService } from 'src/users/users.service';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 // import { UpdateCategoryDto } from './dto/update-category.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @WebSocketGateway()
 export class CategoriesGateway {
@@ -22,19 +24,35 @@ export class CategoriesGateway {
   @UseGuards(AuthGuard)
   @SubscribeMessage('createCategory')
   async createCategory(
-    // Carga el userID en el payload del token para poder sacarlo de ahi
-    @Request() client: any,
+    @Request() request: any,
+    @ConnectedSocket() client: Socket,
     @MessageBody() createCategoryDto: CreateCategoryDto,
   ) {
-    // const currentUser = await this.userService.getUserByEmail();
-    return console.log(client['user']);
-    // return this.categoriesService.createCategory(createCategoryDto);
+    const { categoryName, categoryIcon, isDefault } = createCategoryDto;
+    const currentUser = request['user'].uid;
+    return currentUser
+      ? this.categoriesService.createCategory(request, client, {
+          id: uuidv4(),
+          isDefault,
+          categoryName,
+          categoryIcon,
+          createdBy: currentUser,
+        })
+      : new BadRequestException('');
   }
 
-  // @SubscribeMessage('findAllCategories')
-  // findAll() {
-  //   return this.categoriesService.findAll();
-  // }
+  @UseGuards(AuthGuard)
+  @SubscribeMessage('getAllCategories')
+  async getAllCategories(
+    @Request() request: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const cats = await this.categoriesService.getUserCategories(
+      request,
+      client,
+    );
+    return cats;
+  }
 
   // @SubscribeMessage('findOneCategory')
   // findOne(@MessageBody() id: number) {

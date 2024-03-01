@@ -1,9 +1,9 @@
+import { Column, Entity } from 'typeorm';
 import { UserRole } from '../dto/register-auth.dto';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
+  @Column({ primary: true, unique: true })
   id: string;
 
   @Column({ nullable: false })
@@ -15,6 +15,6 @@ export class User {
   @Column({ nullable: false })
   password: string;
 
-  @Column()
+  @Column({ nullable: false })
   role: UserRole;
 }

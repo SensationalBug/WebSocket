@@ -16,7 +16,7 @@ import { Category } from './categories/entities/category.entity';
       port: parseInt(process.env.DB_PORT),
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
-      database: 'Users',
+      database: 'newBBDD',
       entities: [User, Category],
       synchronize: true,
     }),

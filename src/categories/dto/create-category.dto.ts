@@ -1,7 +1,13 @@
 import { Transform } from 'class-transformer';
-import { IsString } from 'class-validator';
+import { IsBoolean, IsString } from 'class-validator';
 
 export class CreateCategoryDto {
+  @IsString()
+  id: string;
+
+  @IsString()
+  createdBy: string;
+
   @IsString()
   @Transform(({ value }) => value.trim())
   categoryName: string;
@@ -9,4 +15,7 @@ export class CreateCategoryDto {
   @IsString()
   @Transform(({ value }) => value.trim())
   categoryIcon: string;
+
+  @IsBoolean()
+  isDefault: boolean;
 }

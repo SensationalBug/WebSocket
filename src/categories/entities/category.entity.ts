@@ -1,8 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity } from 'typeorm';
 
 @Entity()
 export class Category {
-  @PrimaryGeneratedColumn()
+  @Column({ primary: true, unique: true })
   id: string;
 
   @Column()
@@ -13,4 +13,7 @@ export class Category {
 
   @Column({ default: 'none' })
   categoryIcon: string;
+
+  @Column({ default: false })
+  isDefault: boolean;
 }

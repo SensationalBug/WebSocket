@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import { LoginDto } from 'src/users/dto/login-auth.dto';
 import { RegisterDto } from '../users/dto/register-auth.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -21,14 +22,21 @@ export class AuthService {
     const { email, password } = loginDto;
     const user = await this.userService.getUserByEmail(email);
     if (!user) {
-      return new UnauthorizedException('Credenciales incorrectas');
+      return client.emit(
+        'loginOut',
+        new UnauthorizedException('Credenciales u incorrectas'),
+      );
     }
     const isPasswordValid = await bcryptjs.compare(password, user.password);
     if (!isPasswordValid) {
-      return new UnauthorizedException('Credenciales incorrectas');
+      return client.emit(
+        'loginOut',
+        new UnauthorizedException('Credenciales p incorrectas'),
+      );
     }
-    const payload = { email: user.email };
-    return client.emit('userLogged', {
+    const payload = { uid: user.id };
+    return client.emit('loginOut', {
+      uid: user.id,
       name: user.name,
       access_token: await this.jwtService.signAsync(payload),
     });
@@ -40,15 +48,11 @@ export class AuthService {
     return isUser
       ? new BadRequestException('El usuario ya existe')
       : this.userService.createUser({
+          id: uuidv4(),
           name,
           email,
           role,
           password: await bcryptjs.hashSync(password, 10),
         });
-  }
-
-  async getClients(client: Socket, data: string) {
-    const resUser = await this.userService.getUserByEmail(data);
-    return client.emit('resClient', resUser);
   }
 }

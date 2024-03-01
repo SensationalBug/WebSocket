@@ -8,9 +8,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthGuard } from './guard/auth.guard';
 import { LoginDto } from 'src/users/dto/login-auth.dto';
 import { RegisterDto } from '../users/dto/register-auth.dto';
 
@@ -23,7 +21,6 @@ export class AuthGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(client: Socket) {
     console.log(`Cliente connectado: ${client.id}`);
-    // return this.authService.emitClients(client);
   }
 
   handleDisconnect(client: Socket) {
@@ -31,24 +28,15 @@ export class AuthGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('register')
-  async register(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() registerDto: RegisterDto,
-  ) {
+  async register(@MessageBody() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
-  @SubscribeMessage('login')
+  @SubscribeMessage('loginIn')
   async login(
     @ConnectedSocket() client: Socket,
     @MessageBody() loginDto: LoginDto,
   ) {
     return this.authService.login(client, loginDto);
-  }
-
-  @UseGuards(AuthGuard)
-  @SubscribeMessage('getClients')
-  getClients(@ConnectedSocket() client: Socket, @MessageBody() data: string) {
-    return this.authService.getClients(client, data);
   }
 }
