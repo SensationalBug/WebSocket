@@ -3,13 +3,12 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Socket } from 'socket.io';
+import { v4 as uuidv4 } from 'uuid';
 import * as bcryptjs from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import { LoginDto } from 'src/users/dto/login-auth.dto';
 import { RegisterDto } from '../users/dto/register-auth.dto';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -18,28 +17,21 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(client: Socket, loginDto: LoginDto) {
+  async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
     const user = await this.userService.getUserByEmail(email);
-    if (!user) {
-      return client.emit(
-        'loginOut',
-        new UnauthorizedException('Credenciales u incorrectas'),
-      );
-    }
+    if (!user) return new UnauthorizedException('Credenciales u incorrectas');
+
     const isPasswordValid = await bcryptjs.compare(password, user.password);
-    if (!isPasswordValid) {
-      return client.emit(
-        'loginOut',
-        new UnauthorizedException('Credenciales p incorrectas'),
-      );
-    }
+    if (!isPasswordValid)
+      return new UnauthorizedException('Credenciales u incorrectas');
+
     const payload = { uid: user.id };
-    return client.emit('loginOut', {
+    return {
       uid: user.id,
       name: user.name,
       access_token: await this.jwtService.signAsync(payload),
-    });
+    };
   }
 
   async register(registerDto: RegisterDto) {
