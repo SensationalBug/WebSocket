@@ -11,7 +11,7 @@ import { Category } from './categories/entities/category.entity';
   imports: [
     AuthModule,
     TypeOrmModule.forRoot({
-      type: 'mssql',
+      type: 'postgres',
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT),
       username: process.env.DB_USERNAME,
@@ -19,11 +19,11 @@ import { Category } from './categories/entities/category.entity';
       database: process.env.DB_NAME,
       entities: [User, Category],
       synchronize: true,
-      options: {
-        encrypt: true,
-        enableArithAbort: true,
-        trustServerCertificate: true,
-      },
+      // options: {
+      //   encrypt: true,
+      //   enableArithAbort: true,
+      //   trustServerCertificate: true,
+      // },
     }),
     UsersModule,
     CategoriesModule,

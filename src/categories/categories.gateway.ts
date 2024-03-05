@@ -3,15 +3,14 @@ import {
   WebSocketGateway,
   SubscribeMessage,
   ConnectedSocket,
-  // ConnectedSocket,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { BadRequestException, Request, UseGuards } from '@nestjs/common';
-import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { AuthWsGuard } from 'src/auth/guard/auth.ws.guard';
 // import { UsersService } from 'src/users/users.service';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
-// import { UpdateCategoryDto } from './dto/update-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @WebSocketGateway()
@@ -21,7 +20,7 @@ export class CategoriesGateway {
     // private readonly userService: UsersService,
   ) {}
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthWsGuard)
   @SubscribeMessage('createCategory')
   async createCategory(
     @Request() request: any,
@@ -41,7 +40,7 @@ export class CategoriesGateway {
       : new BadRequestException('');
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthWsGuard)
   @SubscribeMessage('getAllCategories')
   async getAllCategories(
     @Request() request: any,
@@ -54,18 +53,24 @@ export class CategoriesGateway {
     return cats;
   }
 
-  // @SubscribeMessage('findOneCategory')
-  // findOne(@MessageBody() id: number) {
-  //   return this.categoriesService.findOne(id);
-  // }
-
-  // @SubscribeMessage('updateCategory')
-  // update(@MessageBody() updateCategoryDto: UpdateCategoryDto) {
-  //   return this.categoriesService.update(
-  //     updateCategoryDto.id,
-  //     updateCategoryDto,
-  //   );
-  // }
+  @UseGuards(AuthWsGuard)
+  @SubscribeMessage('updateCategory')
+  updateCategory(
+    @Request() request: any,
+    @ConnectedSocket() client: Socket,
+    @MessageBody() updateCategoryDto: UpdateCategoryDto,
+  ) {
+    return this.categoriesService
+      .updateCategory(updateCategoryDto)
+      .then(async () => {
+        const userCategories = await this.categoriesService.getUserCategories(
+          request,
+          client,
+        );
+        console.log(userCategories);
+        client.emit('updateCategory', userCategories);
+      });
+  }
 
   // @SubscribeMessage('removeCategory')
   // remove(@MessageBody() id: number) {

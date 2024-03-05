@@ -23,6 +23,7 @@ export class AuthService {
     if (!user) return new UnauthorizedException('Credenciales u incorrectas');
 
     const isPasswordValid = await bcryptjs.compare(password, user.password);
+
     if (!isPasswordValid)
       return new UnauthorizedException('Credenciales u incorrectas');
 
@@ -46,5 +47,10 @@ export class AuthService {
           role,
           password: await bcryptjs.hashSync(password, 10),
         });
+  }
+
+  async getAllUsers() {
+    const users = await this.userService.getAllUsers();
+    return users;
   }
 }

@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
-// import { UpdateCategoryDto } from './dto/update-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
@@ -29,16 +29,23 @@ export class CategoriesService {
     const userCategories = await this.categoryRepository.findBy({
       createdBy: request['user'].uid,
     });
-    return client.emit('userCats', userCategories);
+    // Devuelve todas las categorias del user en asunto
+    client.emit('AllUserCategories', userCategories);
+    return userCategories;
   }
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} category`;
-  // }
+  findOneCategory(id: string) {
+    return this.categoryRepository.findOneBy({ id });
+  }
 
-  // update(id: number, updateCategoryDto: UpdateCategoryDto) {
-  //   return `This action updates a #${id} category`;
-  // }
+  async updateCategory(updateCategoryDto: UpdateCategoryDto) {
+    const { id } = updateCategoryDto;
+    const category = await this.findOneCategory(id);
+
+    if (!category) new BadRequestException('La categoria no existe');
+
+    return this.categoryRepository.update(id, updateCategoryDto);
+  }
 
   // remove(id: number) {
   //   return `This action removes a #${id} category`;
